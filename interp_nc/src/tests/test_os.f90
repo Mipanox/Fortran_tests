@@ -45,6 +45,12 @@ program test_os
   real(SP), allocatable, dimension(:) :: x1_box, x2_box, x3_box
 
 
+  ! Variables for testing accuracy (true values at the new grid points)
+  real(SP), allocatable, dimension(:)     :: out_1d, tru_1d, err_1d
+  real(SP), allocatable, dimension(:,:)   :: out_2d, tru_2d, err_2d
+  real(SP), allocatable, dimension(:,:,:) :: out_3d, tru_3d, err_3d
+
+
   integer :: i,j,k
 
   !! Setup coordinate grids:
@@ -75,12 +81,41 @@ program test_os
   !---------------------------------------------------------------------
   !-- Test - 1D
   !---------------------------------------------------------------------
+
+  !!-- Grid allocation
   call interp_grid1d(ddim_1d,bmin_1d,bmax_1d,dx_1d,nc_x1,x1_box)
 
   do i=1,nc_x1
-    write (*,*) x1_box(i)
+    ! write (*,*) x1_box(i)
   end do
-  write (*,*) nc_x1
+  ! write (*,*) nc_x1
+
+
+  !!-- Natural Spline
+  call spline(x1,data_1d,1.0e30_sp,1.0e30_sp,tmp_1d)
+
+  allocate(tru_1d(nc_x1))
+  allocate(out_1d(nc_x1))
+  allocate(err_1d(nc_x1))
+
+  !! true values
+  do i=1,nc_x1
+    tru_1d(i) = f1(x1_box(i))
+  end do
+
+  do i=1,nc_x1
+    out_1d(i) = splint(x1,data_1d,tmp_1d,x1_box(i))
+    err_1d(i) = abs(out_1d(i)-tru_1d(i))
+
+    if (mod(i,5) == 0) then
+      write (*,*) 'At index ', i, ', coordinate', x1_box(i)
+      write (*,*) ' value is ', tru_1d(i), ' and '
+      write (*,*) ' error is ', err_1d(i)
+    end if
+  end do
+
+
+
   !---------------------------------------------------------------------
 
   contains
