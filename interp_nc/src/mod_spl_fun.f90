@@ -1,3 +1,6 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Module for interpolation functions; largely inherited from NR  !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 module spl_fun
 
   implicit none
@@ -20,9 +23,18 @@ module spl_fun
     module procedure splin2
   end interface
 
+  interface splint_2d
+    module procedure splint_2d
+  end interface
+
+  interface splint_3d
+    module procedure splint_3d
+  end interface
+
 
   public :: spline, splint
-  public :: splie2, splin2
+  public :: splie2, splin2, splint_2d
+  public :: splint_3d
 
 contains
 
@@ -40,7 +52,7 @@ contains
     ! either increasing or decreasing. j = 0 or j = N is returned 
     ! to indicate that x is out of range.
 
-    integer(I4B) :: n, jl, jm, ju
+    integer(I4B) :: n,jl,jm,ju
     logical :: ascnd
 
     n = size(xx)
@@ -51,7 +63,8 @@ contains
 
     do 
       if (ju-jl <= 1) exit   ! Repeat until this is satisfied
-        jm = (ju+jl)/2       ! Compute a midpoint
+        
+      jm = (ju+jl)/2         ! Compute a midpoint
       if (ascnd .eqv. (x >= xx(jm))) then
         jl = jm              ! and replace either the lower limit
       else
@@ -157,8 +170,8 @@ contains
       call tridag_par(x,y,z,q,u(2:n:2))        ! Recurse and get even u's.
 
       u(1) = (r(1)-c(1)*u(2))/b(1)             ! Substitute and get odd u's.
-      u(3:n-1:2) =  ( r(3:n-1:2)-a(2:n-2:2)*u(2:n-1:2) ) &
-                   -  c(3:n-1:2)*u(4:n:2)/b(3:n-1:2)
+      u(3:n-1:2) =  ( r(3:n-1:2)-a(2:n-2:2)*u(2:n-1:2) &
+                    - c(3:n-1:2)*u(4:n:2) ) / b(3:n-1:2)
       
       if (nm == n2) u(n) = (r(n)-a(n-1)*u(n-1))/b(n)
 
@@ -167,7 +180,10 @@ contains
 
 
 
-  !---------------------------------------------------------------------
+  !---------------------------------------------------------------------!
+  !----- 1D ------------------------------------------------------------!
+  !---------------------------------------------------------------------!
+  
   subroutine spline(x,y,yp1,ypn,y2)
     use nrtype
     use nrutil, ONLY : assert_eq
@@ -265,9 +281,9 @@ contains
 
 
 
-
-
-  !---------------------------------------------------------------------
+  !---------------------------------------------------------------------!
+  !----- 2D ------------------------------------------------------------!
+  !---------------------------------------------------------------------!
   subroutine splie2(x1a,x2a,ya,y2a)
     use nrtype
     use nrutil, ONLY : assert_eq
@@ -331,6 +347,87 @@ contains
 
   end function splin2
 
+  !---------------------------------------------------------------------
+  !!! Wrap-up (integration) of 'splie2' and 'splin2' above
+  function splint_2d(x1a,x2a,ya,x1,x2)
+    use nrtype
+    use nrutil, ONLY : assert_eq
+
+    implicit none
+
+    real(SP), dimension(:), intent(in) :: x1a,x2a
+    real(SP), dimension(:,:), intent(in) :: ya
+    real(SP), intent(in) :: x1,x2
+    real(SP), dimension(size(ya,1),size(ya,2)) :: y2a
+    real(SP) :: splint_2d
+
+    integer(I4B) :: j,m,ndum
+    real(SP), dimension(size(x1a)) :: yytmp,y2tmp2
+
+    m    = assert_eq(size(x1a),size(ya,1),'splint_2d: m')
+    ndum = assert_eq(size(x2a),size(ya,2),'splint_2d: ndum')
+
+    ! first dimension
+    do j=1,m ! Values 1 x 10^30 signal a natural spline.
+      call spline(x2a,ya(j,:),1.0e30_sp,1.0e30_sp,y2a(j,:))
+    end do
+
+    do j=1,m
+      yytmp(j) = splint(x2a,ya(j,:),y2a(j,:),x2)
+      ! Perform m evaluations of the splines 
+    end do
+
+    ! second dimension
+    call spline(x1a,yytmp,1.0e30_sp,1.0e30_sp,y2tmp2)
+    ! Construct the one-dimensional spline 
+    ! from the "reduced" row/column of points
+
+    splint_2d = splint(x1a,yytmp,y2tmp2,x1)
+
+  end function splint_2d
+
+
+
+
+  !---------------------------------------------------------------------!
+  !----- 3D ------------------------------------------------------------!
+  !---------------------------------------------------------------------!
+  function splint_3d(x1a,x2a,x3a,ya,x1,x2,x3)
+    use nrtype
+    use nrutil, ONLY : assert_eq
+
+    implicit none
+
+    real(SP), dimension(:), intent(in) :: x1a,x2a,x3a
+    real(SP), dimension(:,:,:), intent(in) :: ya
+    real(SP), intent(in) :: x1,x2,x3
+    real(SP), dimension(size(ya,1),size(ya,2),size(ya,3)) :: y3a
+    real(SP) :: splint_3d
+
+    integer(I4B) :: i,j,m,n,l
+    real(SP), dimension(size(x1a),size(x2a)) :: yytmp
+
+    m = assert_eq(size(x1a),size(ya,1),'splint_3d: m')
+    n = assert_eq(size(x2a),size(ya,2),'splint_3d: n')
+    l = assert_eq(size(x3a),size(ya,3),'splint_3d: l')
+
+    ! along first dimension (a "bundle" of 1d lines)
+    do i=1,m ! Values 1 x 10^30 signal a natural spline.
+      do j=1,n 
+        call spline(x3a,ya(i,j,:),1.0e30_sp,1.0e30_sp,y3a(i,j,:))
+      end do
+    end do
+
+    do i=1,m       ! evaluate the "plane" appropriate at x3
+      do j=1,n
+        yytmp(i,j) = splint(x3a,ya(i,j,:),y3a(i,j,:),x3)
+      end do
+    end do
+
+    ! remaining 2 dimensions
+    splint_3d = splint_2d(x1a,x2a,yytmp,x1,x2)
+
+  end function splint_3d
 
 end module spl_fun
 

@@ -4,9 +4,9 @@ program test
 
   implicit none
 
-  integer, parameter :: nx = 6     !! number of points in x
-  integer, parameter :: ny = 6     !! number of points in y
-  integer, parameter :: nz = 6     !! number of points in z
+  integer, parameter :: nx = 9     !! number of points in x
+  integer, parameter :: ny = 5     !! number of points in y
+  integer, parameter :: nz = 8     !! number of points in z
 
   real(SP), dimension(nx) :: x
   real(SP), dimension(ny) :: y
@@ -33,22 +33,22 @@ program test
   !  integer values for data grid
   !  half integers for grid to be interpolated
   do i=1,nx-1
-     x(i)  = dble(i-1)
-     xt(i) = dble(i)-0.5
+     x(i)  = dble(i-1)!/dble(nx-1)
+     xt(i) = (dble(i)-0.5)!/dble(nx-1)
   end do
-  x(nx) = dble(nx-1)
+  x(nx) = dble(nx-1)!/dble(nx-1)
 
   do j=1,ny-1
-     y(j)  = dble(j-1)
-     yt(i) = dble(j)-0.5
+     y(j)  = (dble(j-1))!/dble(ny-1)
+     yt(j) = (dble(j)-0.5)!/dble(ny-1)
   end do
-  y(ny) = dble(ny-1)
+  y(ny) = dble(ny-1)!/dble(ny-1)
 
   do k=1,nz-1
-     z(k)  = dble(k-1)
-     zt(k) = dble(k)-0.5
+     z(k)  = (dble(k-1))!/dble(nz-1)
+     zt(k) = (dble(k)-0.5)!/dble(nz-1)
   end do
-  z(nz) = dble(nz-1)
+  z(nz) = dble(nz-1)!/dble(nz-1)
 
   ! Setup test functions
   do i=1,nx
@@ -73,19 +73,72 @@ program test
   end do
 
   !---------------------------------------------------------------------
-  !-- Test spline
+  !-- Test spline - 1D
   !---------------------------------------------------------------------
+
+  ! Natural spline
   call spline(x,fcn_1d,1.0e30_sp,1.0e30_sp,tmp_1d)
 
   do i=1,nx-1
     out_1d(i) = splint(x,fcn_1d,tmp_1d,xt(i))
     err_1d(i) = abs(out_1d(i)-true_o1d(i))
 
-    write (*,*) 'At index ', i, ','
-    write (*,*) ' value is ', true_o1d(i), ' and '
-    write (*,*) ' error is ', err_1d(i)
+    ! write (*,*) 'At index ', i, ', coordinate', xt(i)
+    ! write (*,*) ' value is ', true_o1d(i), ' and '
+    ! write (*,*) ' error is ', err_1d(i)
   
   end do
+
+  !---------------------------------------------------------------------
+  !-- Test spline - 2D
+  !---------------------------------------------------------------------
+  do i=1,nx-1
+    do j=1,ny-1
+      out_2d(i,j) = splint_2d(x,y,fcn_2d,xt(i),yt(j))
+      err_2d(i,j) = abs(out_2d(i,j)-true_o2d(i,j))
+
+      ! write (*,*) 'At index (',i,',',j,') coordinates', xt(i),yt(j)
+      ! write (*,*) ' value  is ', true_o2d(i,j), 'and'
+      ! write (*,*) ' output is ', out_2d(i,j), 'and'
+      ! write (*,*) ' error  is ', err_2d(i,j)
+    end do
+  end do
+
+  !---------------------------------------------------------------------
+  !-- Test spline - 3D
+  !---------------------------------------------------------------------
+  do i=1,nx-1
+    do j=1,ny-1
+      do k=1,nz-1
+        out_3d(i,j,k) = splint_3d(x,y,z,fcn_3d,xt(i),yt(j),zt(k))
+        err_3d(i,j,k) = abs(out_3d(i,j,k)-true_o3d(i,j,k))
+
+        if (mod(i,2)==0 .and. mod(j,2)==0 .and. mod(k,2)==0) then
+          write (*,*) 'At index (',i,',',j,',',k,') coordinates', xt(i),yt(j),zt(k)
+          write (*,*) ' value is ', true_o3d(i,j,k), ' and '
+          write (*,*) ' error is ', err_3d(i,j,k)
+        end if
+      end do
+    end do
+  end do
+
+  !! Santiy check; inputing the exact same grid
+  do i=1,nx
+    do j=1,ny
+      do k=1,nz
+        out_3d(i,j,k) = splint_3d(x,y,z,fcn_3d,x(i),y(j),z(k))
+        err_3d(i,j,k) = abs(out_3d(i,j,k)-fcn_3d(i,j,k))
+
+        if (mod(i,2)==0 .and. mod(j,2)==0 .and. mod(k,2)==0) then
+          write (*,*) 'At coordinates', x(i),y(j),z(k)
+          write (*,*) ' value is ', fcn_3d(i,j,k), ' and '
+          write (*,*) ' error is ', err_3d(i,j,k)
+        end if
+      end do
+    end do
+  end do
+
+
 
 
 
