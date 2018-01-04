@@ -31,12 +31,10 @@ module m_interp_fun
     module procedure splint_3d
   end interface
 
-  interface interp_grid1d
+  interface interp_grid
     module procedure interp_grid1d
-  end interface
-
-  interface interp_grid2d
     module procedure interp_grid2d
+    module procedure interp_grid3d
   end interface
 
 
@@ -44,7 +42,7 @@ module m_interp_fun
   public :: splie2, splin2, splint_2d
   public :: splint_3d
 
-  public :: interp_grid1d, interp_grid2d
+  public :: interp_grid
 
 contains
 
@@ -452,6 +450,7 @@ contains
   end function splint_3d
 
 
+
   !-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!
   !-----      Gridding
   !---------------------------------------------------------------------!
@@ -526,6 +525,50 @@ contains
     end do
 
   end subroutine interp_grid2d
+
+  !---------------------------------------------------------------------!
+  subroutine interp_grid3d(ddim_3d,bmin_3d,bmax_3d,dx, &
+                           nc_x1,nc_x2,nc_x3,x1_box,x2_box,x3_box)
+    use nrtype
+
+    implicit none
+
+    integer, dimension(3), intent(in) :: ddim_3d
+    real(dp), dimension(3), intent(in) :: bmin_3d, bmax_3d
+    real(dp), dimension(3), intent(in) :: dx
+    integer, intent(out) :: nc_x1, nc_x2, nc_x3
+    real(dp), allocatable, dimension(:), intent(out) :: x1_box, x2_box, x3_box
+
+    !! Dummies
+    real(dp), dimension(3) :: bmin_idx, bmax_idx
+    integer(I4B) :: i,j,k
+
+    ! In cell indices; array operation
+    bmin_idx = bmin_3d / dx
+    bmax_idx = bmax_3d / dx
+
+    ! how many grids in new simulation of the desired box 
+    nc_x1 = int(bmax_idx(1)-bmin_idx(1))
+    nc_x2 = int(bmax_idx(2)-bmin_idx(2))
+    nc_x3 = int(bmax_idx(3)-bmin_idx(3))
+      
+    ! construct grid arrays - fix first ends
+    !! see 'interp_grid1d' for details
+    allocate(x1_box(nc_x1))
+    allocate(x2_box(nc_x2))
+    allocate(x3_box(nc_x3))
+
+    do i=1,nc_x1
+      x1_box(i) = 1.0_dp + (i-1)*(real(ddim_3d(1),SP)-1.0_dp)/real(nc_x1,SP)
+    end do
+    do j=1,nc_x2
+      x2_box(j) = 1.0_dp + (j-1)*(real(ddim_3d(2),SP)-1.0_dp)/real(nc_x2,SP)
+    end do
+    do k=1,nc_x3
+      x3_box(k) = 1.0_dp + (k-1)*(real(ddim_3d(3),SP)-1.0_dp)/real(nc_x3,SP)
+    end do
+
+  end subroutine interp_grid3d
 
 end module m_interp_fun
 

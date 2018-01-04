@@ -13,9 +13,9 @@ program test_os
 
   ! Variables for setting up test data
   !! datadim
-  integer, dimension(1), parameter :: ddim_1d = 80
-  integer, dimension(2), parameter :: ddim_2d = (/80, 90/)
-  integer, dimension(3), parameter :: ddim_3d = (/80, 90, 70/)
+  integer, dimension(1), parameter :: ddim_1d = 8
+  integer, dimension(2), parameter :: ddim_2d = (/8, 9/)
+  integer, dimension(3), parameter :: ddim_3d = (/8, 9, 7/)
 
   real(dp), dimension(ddim_1d(1)) :: x1
   real(dp), dimension(ddim_2d(2)) :: x2
@@ -83,7 +83,7 @@ program test_os
   !---------------------------------------------------------------------
 
   !!-- Grid allocation
-  call interp_grid1d(ddim_1d,bmin_1d,bmax_1d,dx_1d,nc_x1,x1_box)
+  call interp_grid(ddim_1d,bmin_1d,bmax_1d,dx_1d,nc_x1,x1_box)
 
   do i=1,nc_x1
     ! write (*,*) x1_box(i)
@@ -123,7 +123,7 @@ program test_os
   !---------------------------------------------------------------------
 
   !!-- Grid allocation
-  call interp_grid2d(ddim_2d,bmin_2d,bmax_2d,dx_2d,nc_x1,nc_x2,x1_box,x2_box)
+  call interp_grid(ddim_2d,bmin_2d,bmax_2d,dx_2d,nc_x1,nc_x2,x1_box,x2_box)
 
   do i=1,nc_x1
     ! print *, x1_box(i)
@@ -131,8 +131,6 @@ program test_os
   do j=1,nc_x2
     ! print *, x2_box(j)
   end do
-  ! print *, nc_x1, nc_x2
-  print *, splint_2d(x1,x2,data_2d,x1_box(5),x2_box(10))
 
   !! true values
   allocate(tru_2d(nc_x1,nc_x2))
@@ -152,10 +150,10 @@ program test_os
       err_2d(i,j) = abs(out_2d(i,j)-tru_2d(i,j))
 
       if (mod(i,5)==0 .and. mod(j,5)==0) then
-        write (*,*) 'At index (',i,',',j,') coordinates', x1_box(i),x2_box(j)
-        write (*,*) ' value  is ', tru_2d(i,j), 'and'
-        write (*,*) ' output is ', out_2d(i,j), 'and'
-        write (*,*) ' error  is ', err_2d(i,j)
+        ! write (*,*) 'At index (',i,',',j,') coordinates', x1_box(i),x2_box(j)
+        ! write (*,*) ' value  is ', tru_2d(i,j), 'and'
+        ! write (*,*) ' output is ', out_2d(i,j), 'and'
+        ! write (*,*) ' error  is ', err_2d(i,j)
       end if
     end do
   end do
@@ -163,6 +161,65 @@ program test_os
   deallocate(tru_2d)
   deallocate(out_2d)
   deallocate(err_2d)
+
+  !---------------------------------------------------------------------
+  !-- Test - 3D
+  !---------------------------------------------------------------------
+
+  !!-- Grid allocation
+  call interp_grid(ddim_3d,bmin_3d,bmax_3d,dx_3d, &
+                   nc_x1,nc_x2,nc_x3,x1_box,x2_box,x3_box)
+
+  do i=1,nc_x1
+    ! print *, x1_box(i)
+  end do
+  do j=1,nc_x2
+    ! print *, x2_box(j)
+  end do
+  do k=1,nc_x3
+    print *, x3_box(k)
+  end do
+
+  print *, nc_x1, nc_x2, nc_x3
+
+  !! true values
+  allocate(tru_3d(nc_x1,nc_x2,nc_x3))
+  allocate(out_3d(nc_x1,nc_x2,nc_x3))
+  allocate(err_3d(nc_x1,nc_x2,nc_x3))
+
+  do i=1,nc_x1
+    do j=1,nc_x2
+      do k=1,nc_x3
+        tru_3d(i,j,k) = f3(x1_box(i),x2_box(j),x3_box(k))
+      end do
+    end do
+  end do
+  print *, tru_3d
+  !!-- Natural Spline
+  do i=1,nc_x1
+    do j=1,nc_x2
+      do k=1,nc_x3
+        out_3d(i,j,k) = splint_3d(x1,x2,x3,data_3d,x1_box(i),x2_box(j),x3_box(k))
+        err_3d(i,j,k) = abs(out_3d(i,j,k)-tru_3d(i,j,k))
+
+        if (mod(i,5)==0 .and. mod(j,5)==0 .and. mod(k,10)==0) then
+          write (*,*) 'At index (',i,',',j,',',k,') coordinates', x1_box(i),x2_box(j),x3_box(k)
+          write (*,*) ' value  is ', tru_3d(i,j,k), 'and'
+          write (*,*) ' output is ', out_3d(i,j,k), 'and'
+          write (*,*) ' error  is ', err_3d(i,j,k)
+        end if
+      end do
+    end do
+  end do
+
+  deallocate(tru_3d)
+  deallocate(out_3d)
+  deallocate(err_3d)
+
+
+
+
+
 
   !---------------------------------------------------------------------
 
