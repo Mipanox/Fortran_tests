@@ -6,7 +6,7 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 program test_os
-  use spl_fun
+  use m_interp_fun
   use nrtype
 
   implicit none
@@ -17,38 +17,38 @@ program test_os
   integer, dimension(2), parameter :: ddim_2d = (/80, 90/)
   integer, dimension(3), parameter :: ddim_3d = (/80, 90, 70/)
 
-  real(SP), dimension(ddim_1d(1)) :: x1
-  real(SP), dimension(ddim_2d(2)) :: x2
-  real(SP), dimension(ddim_3d(3)) :: x3
+  real(dp), dimension(ddim_1d(1)) :: x1
+  real(dp), dimension(ddim_2d(2)) :: x2
+  real(dp), dimension(ddim_3d(3)) :: x3
 
   !! function values on given grids / temporary storing spline output
-  real(SP), dimension(ddim_1d(1))                       :: data_1d, tmp_1d
-  real(SP), dimension(ddim_2d(1),ddim_2d(2))            :: data_2d, tmp_2d
-  real(SP), dimension(ddim_3d(1),ddim_3d(2),ddim_3d(3)) :: data_3d, tmp_3d
+  real(dp), dimension(ddim_1d(1))                       :: data_1d, tmp_1d
+  real(dp), dimension(ddim_2d(1),ddim_2d(2))            :: data_2d, tmp_2d
+  real(dp), dimension(ddim_3d(1),ddim_3d(2),ddim_3d(3)) :: data_3d, tmp_3d
 
   ! Parameters of the test grids
   !! Box extent in new setup
-  real(SP), dimension(1), parameter :: bmin_1d = 2.68, &
+  real(dp), dimension(1), parameter :: bmin_1d = 2.68, &
                                        bmax_1d = 40.
-  real(SP), dimension(2), parameter :: bmin_2d = (/2.68,  8.5/), &
+  real(dp), dimension(2), parameter :: bmin_2d = (/2.68,  8.5/), &
                                        bmax_2d = (/40. , 36.5/)
-  real(SP), dimension(3), parameter :: bmin_3d = (/2.68,  8.5,  6.1/), &
+  real(dp), dimension(3), parameter :: bmin_3d = (/2.68,  8.5,  6.1/), &
                                        bmax_3d = (/40. , 36.5, 20.5/)
 
   !! Sizes of cells in simulation units
-  real(SP), dimension(1), parameter :: dx_1d = 0.9
-  real(SP), dimension(2), parameter :: dx_2d = (/0.9, 1.6/)
-  real(SP), dimension(3), parameter :: dx_3d = (/0.9, 1.6, 0.8/)
+  real(dp), dimension(1), parameter :: dx_1d = 0.9
+  real(dp), dimension(2), parameter :: dx_2d = (/0.9, 1.6/)
+  real(dp), dimension(3), parameter :: dx_3d = (/0.9, 1.6, 0.8/)
 
   !! Cell grids to be determined by box extent, etc.
   integer :: nc_x1, nc_x2, nc_x3
-  real(SP), allocatable, dimension(:) :: x1_box, x2_box, x3_box
+  real(dp), allocatable, dimension(:) :: x1_box, x2_box, x3_box
 
 
   ! Variables for testing accuracy (true values at the new grid points)
-  real(SP), allocatable, dimension(:)     :: out_1d, tru_1d, err_1d
-  real(SP), allocatable, dimension(:,:)   :: out_2d, tru_2d, err_2d
-  real(SP), allocatable, dimension(:,:,:) :: out_3d, tru_3d, err_3d
+  real(dp), allocatable, dimension(:)     :: out_1d, tru_1d, err_1d
+  real(dp), allocatable, dimension(:,:)   :: out_2d, tru_2d, err_2d
+  real(dp), allocatable, dimension(:,:,:) :: out_3d, tru_3d, err_3d
 
 
   integer :: i,j,k
@@ -57,13 +57,13 @@ program test_os
   !!  integer values for data grid
   !!  half integers for grid to be interpolated
   do i=1,ddim_1d(1)
-     x1(i)  = dble(i)
+     x1(i) = dble(i)
   end do
   do j=1,ddim_2d(2)
-     x2(j)  = (dble(j))
+     x2(j) = dble(j)
   end do
   do k=1,ddim_3d(3)
-     x3(k)  = (dble(k))
+     x3(k) = dble(k)
   end do
 
   !! Fill in test arrays
@@ -92,7 +92,7 @@ program test_os
 
 
   !!-- Natural Spline
-  call spline(x1,data_1d,1.0e30_sp,1.0e30_sp,tmp_1d)
+  call spline(x1,data_1d,1.0e30_dp,1.0e30_dp,tmp_1d)
 
   allocate(tru_1d(nc_x1))
   allocate(out_1d(nc_x1))
@@ -108,69 +108,86 @@ program test_os
     err_1d(i) = abs(out_1d(i)-tru_1d(i))
 
     if (mod(i,5) == 0) then
-      write (*,*) 'At index ', i, ', coordinate', x1_box(i)
-      write (*,*) ' value is ', tru_1d(i), ' and '
-      write (*,*) ' error is ', err_1d(i)
+      ! write (*,*) 'At index ', i, ', coordinate', x1_box(i)
+      ! write (*,*) ' value is ', tru_1d(i), ' and '
+      ! write (*,*) ' error is ', err_1d(i)
     end if
   end do
 
+  deallocate(tru_1d)
+  deallocate(out_1d)
+  deallocate(err_1d)
 
+  !---------------------------------------------------------------------
+  !-- Test - 2D
+  !---------------------------------------------------------------------
+
+  !!-- Grid allocation
+  call interp_grid2d(ddim_2d,bmin_2d,bmax_2d,dx_2d,nc_x1,nc_x2,x1_box,x2_box)
+
+  do i=1,nc_x1
+    ! print *, x1_box(i)
+  end do
+  do j=1,nc_x2
+    ! print *, x2_box(j)
+  end do
+  ! print *, nc_x1, nc_x2
+  print *, splint_2d(x1,x2,data_2d,x1_box(5),x2_box(10))
+
+  !! true values
+  allocate(tru_2d(nc_x1,nc_x2))
+  allocate(out_2d(nc_x1,nc_x2))
+  allocate(err_2d(nc_x1,nc_x2))
+
+  do i=1,nc_x1
+    do j=1,nc_x2
+      tru_2d(i,j) = f2(x1_box(i),x2_box(j))
+    end do
+  end do
+
+  !!-- Natural Spline
+  do i=1,nc_x1
+    do j=1,nc_x2
+      out_2d(i,j) = splint_2d(x1,x2,data_2d,x1_box(i),x2_box(j))
+      err_2d(i,j) = abs(out_2d(i,j)-tru_2d(i,j))
+
+      if (mod(i,5)==0 .and. mod(j,5)==0) then
+        write (*,*) 'At index (',i,',',j,') coordinates', x1_box(i),x2_box(j)
+        write (*,*) ' value  is ', tru_2d(i,j), 'and'
+        write (*,*) ' output is ', out_2d(i,j), 'and'
+        write (*,*) ' error  is ', err_2d(i,j)
+      end if
+    end do
+  end do
+
+  deallocate(tru_2d)
+  deallocate(out_2d)
+  deallocate(err_2d)
 
   !---------------------------------------------------------------------
 
   contains
 
-    subroutine interp_grid1d(ddim_1d,bmin_1d,bmax_1d,dx,nc_x1,x1_box)
-      implicit none
-      integer, dimension(1), intent(in) :: ddim_1d
-      real(SP), dimension(1), intent(in) :: bmin_1d, bmax_1d
-      real(SP), dimension(1), intent(in) :: dx
-      integer, intent(out) :: nc_x1
-      real(SP), allocatable, dimension(:), intent(out) :: x1_box
-
-      !! Dummies
-      real(SP) :: bmin_idx, bmax_idx
-
-      ! In cell indices
-      bmin_idx = bmin_1d(1) / dx(1)
-      bmax_idx = bmax_1d(1) / dx(1)
-
-      ! how many grids in new simulation of the desired box 
-      nc_x1 = int(bmax_idx-bmin_idx)
-      
-      ! construct grid arrays; using FORTRAN-like style
-      !! fix first ends - namely the first cells of the new 
-      !! simulation always correspond to the first cells of 
-      !! the data
-      allocate(x1_box(nc_x1))
-      do i=1,nc_x1
-        !! starting from 1, the first cell
-        x1_box(i) = 1.0_sp + (i-1)*(real(ddim_1d(1),SP)-1.0_sp)/real(nc_x1,SP)
-      end do
-
-    end subroutine interp_grid1d
-
-
-
     !-------------------------------------------------------------
     function f1(x) !! 1d test function
       implicit none
-      real(SP) :: x,f1
-      f1 = 0.5_sp * (x*exp(-x) + sin(x) )
+      real(dp) :: x,f1
+      f1 = 0.5_dp * (x*exp(-x) + sin(x) )
     end function f1
 
     function f2(x,y) !! 2d test function
       implicit none
-      real(SP) :: x,y,piov2,f2
-      piov2 = 2.0_sp * atan(1.0_sp)
-      f2 = 0.5_sp * (y*exp(-x) + sin(piov2*y) )
+      real(dp) :: x,y,piov2,f2
+      piov2 = 2.0_dp !* atan(1.0_dp)
+      f2 = exp(-x/100.0_dp) * sin(piov2*y/50.0_dp) + cos((x/50.0_dp)**0.5)
+      !f2 = 0.5_dp * (y/50.0_dp*exp(-x/50.0_dp) + sin(piov2*y/50.0_dp) )
     end function f2
  
     function f3 (x,y,z) !! 3d test function
       implicit none
-      real(SP) :: x,y,z,piov2,f3
-      piov2 = 2.0_sp*atan(1.0_sp)
-      f3 = 0.5_sp*( y*exp(-x) + z*sin(piov2*y) )
+      real(dp) :: x,y,z,piov2,f3
+      piov2 = 2.0_dp!*atan(1.0_dp)
+      f3 = 0.5_dp*( y/50.0_dp*exp(-x/100.0_dp) + z/50.0_dp*sin(piov2*y/50.0_dp) )
     end function f3
 
 end program test_os
