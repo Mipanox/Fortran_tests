@@ -3,7 +3,7 @@
 !! implementations for all the Numerical Recipes utility functions described
 !! in detail in Chapter 23. (details see p.1364 of the book)
 
-module urutil
+module nrutil
   use nrtype
 
   ! Parameters for crossover from serial to parallel algorithms 
@@ -42,7 +42,7 @@ module urutil
     if (n1 == n2) then
       assert_eq2 = n1
     else
-      write (*,*) 'nrerror: an assert_eq failed with this tag:', string
+      write (*,*) 'nrerror: an assert_eq failed with this tag: ', string
       STOP 'program terminated by assert_eq2'
     end if
   end function assert_eq2
@@ -56,7 +56,7 @@ module urutil
     if (n1 == n2 .and. n2 == n3) then
       assert_eq3 = n1
     else
-      write (*,*) 'nrerror: an assert_eq failed with this tag:', string
+      write (*,*) 'nrerror: an assert_eq failed with this tag: ', string
       STOP 'program terminated by assert_eq3'
     end if
   end function assert_eq3
@@ -70,7 +70,7 @@ module urutil
     if (n1 == n2 .and. n2 == n3 .and. n3==n4) then
       assert_eq4 = n1
     else
-      write (*,*) 'nrerror: an assert_eq failed with this tag:', string
+      write (*,*) 'nrerror: an assert_eq failed with this tag: ', string
       STOP 'program terminated by assert_eq4'
     end if
   end function assert_eq4
@@ -84,7 +84,7 @@ module urutil
     if ( all(nn(2:) == nn(1)) ) then
       assert_eqn = nn(1)
     else
-      write (*,*) 'nrerror: an assert_eq failed with this tag:', string
+      write (*,*) 'nrerror: an assert_eq failed with this tag: ', string
       STOP 'program terminated by assert_eqn'
     end if
   end function assert_eqn

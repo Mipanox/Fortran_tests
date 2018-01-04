@@ -30,14 +30,14 @@ module nrtype
   type sprs2_sp
     integer(I4B) :: n, len
     real(SP), dimension(:), pointer :: val
-    integar(I4B), dimension(:), pointer :: irow
+    integer(I4B), dimension(:), pointer :: irow
     integer(I4B), dimension(:), pointer :: jcol
   end type sprs2_sp
 
   type sprs2_dp
     integer(I4B) :: n, len
     real(DP), dimension(:), pointer :: val
-    integar(I4B), dimension(:), pointer :: irow
+    integer(I4B), dimension(:), pointer :: irow
     integer(I4B), dimension(:), pointer :: jcol
   end type sprs2_dp
 

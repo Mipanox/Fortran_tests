@@ -86,7 +86,7 @@ contains
     integer(I4B) :: n,j
     real(SP) :: bet
 
-    n = assert_eq((/size(a)+1, size(b),size(c),size(r),size(u)/),'tridag_ser')
+    n = assert_eq((/size(a)+1,size(b),size(c)+1,size(r),size(u)/),'tridag_ser')
 
     bet = b(1)
     if (bet == 0.0) call nrerror('tridag_ser: Error at code stage 1')
@@ -111,7 +111,7 @@ contains
   recursive subroutine tridag_par(a,b,c,r,u)
     use nrtype
     use nrutil, ONLY : assert_eq, nrerror
-    use nr, ONLY : tridag_ser
+    ! use nr, ONLY : tridag_ser
 
     implicit none
 
@@ -170,8 +170,8 @@ contains
   !---------------------------------------------------------------------
   subroutine spline(x,y,yp1,ypn,y2)
     use nrtype
-    use urutil, ONLY : assert_eq
-    use nr, ONLY : tridag
+    use nrutil, ONLY : assert_eq
+    ! use nr, ONLY : tridag_par
 
     implicit none
 
@@ -206,7 +206,7 @@ contains
       r(1) = 0.0                       ! set either to be "natural"
       c(1) = 0.0
     else                               ! or else to have a specified first 
-      r(1) = (3.0_sp / (x(2)-x(1))*((y(2)-y(1))/(x(2)-x(1))-yp1) ! derivative
+      r(1) = (3.0_sp / (x(2)-x(1)))*((y(2)-y(1))/(x(2)-x(1))-yp1) ! derivative
       c(1) = 0.5
     end if
 
@@ -214,11 +214,11 @@ contains
       r(n) = 0.0
       c(n) = 0.0
     else
-      r(n) = (-3.0_sp / (x(n)-x(n-1))*((y(n)-y(n-1))/(x(n)-x(n-1))-yp1)
+      r(n) = (-3.0_sp / (x(n)-x(n-1)))*((y(n)-y(n-1))/(x(n)-x(n-1))-yp1)
       a(n) = 0.5
     end if
 
-    call tridag(a(2:n),b(1:n),c(1:n-1),r(1:n),y2(1:n))
+    call tridag_par(a(2:n),b(1:n),c(1:n-1),r(1:n),y2(1:n))
 
   end subroutine spline
 
@@ -226,7 +226,7 @@ contains
   function splint(xa,ya,y2a,x)
     use nrtype
     use nrutil, ONLY : assert_eq, nrerror
-    use nr, ONLY : locate
+    ! use nr, ONLY : locate
 
     implicit none
 
@@ -271,7 +271,7 @@ contains
   subroutine splie2(x1a,x2a,ya,y2a)
     use nrtype
     use nrutil, ONLY : assert_eq
-    use nr, ONLY : spline
+    ! use nr, ONLY : spline
 
     implicit none
 
@@ -300,7 +300,7 @@ contains
   function splin2(x1a,x2a,ya,y2a,x1,x2)
     use nrtype
     use nrutil, ONLY : assert_eq
-    use nr, ONLY : spline, splint
+    ! use nr, ONLY : spline, splint
 
     implicit none
 

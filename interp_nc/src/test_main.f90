@@ -8,20 +8,24 @@ program test
   integer, parameter :: ny = 6     !! number of points in y
   integer, parameter :: nz = 6     !! number of points in z
 
-  real(SP) :: x(nx) ,y(ny) ,z(nz)
-  real(SP) :: xt(nx-1),yt(nx-1),zt(nz-1)
+  real(SP), dimension(nx) :: x
+  real(SP), dimension(ny) :: y
+  real(SP), dimension(nz) :: z
+  real(SP), dimension(nx-1) :: xt
+  real(SP), dimension(ny-1) :: yt
+  real(SP), dimension(nz-1) :: zt
 
   ! function values on given grids / temporary storing spline output
-  real(SP) :: fcn_1d(nx)      , tmp_1d(nx)
-  real(SP) :: fcn_2d(nx,ny)   , tmp_1d(nx,ny)
-  real(SP) :: fcn_3d(nx,ny,nz), tmp_1d(nx,ny,nz)
+  real(SP), dimension(nx)       :: fcn_1d, tmp_1d
+  real(SP), dimension(nx,ny)    :: fcn_2d, tmp_2d
+  real(SP), dimension(nx,ny,nz) :: fcn_3d, tmp_3d
 
   ! arrays for values on test grids (with 1 fewer index)
   !  true_o*d stores true function values from f1,f2,f3 defined below
   !  err_*d then stores the difference between true and interpolated values
-  real(SP) :: out_1d(nx-1)          ,true_o1d(nx-1)          , err_1d(nx-1)
-  real(SP) :: out_2d(nx-1,ny-1)     ,true_o2d(nx-1,ny-1)     , err_2d(nx-1,ny-1)
-  real(SP) :: out_3d(nx-1,ny-1,nz-1),true_o3d(nx-1,ny-1,nz-1), err_3d(nx-1,ny-1,nz-1)
+  real(SP), dimension(nx-1)           :: out_1d, true_o1d, err_1d
+  real(SP), dimension(nx-1,ny-1)      :: out_2d, true_o2d, err_2d
+  real(SP), dimension(nx-1,ny-1,nz-1) :: out_3d, true_o3d, err_3d
 
   integer :: i,j,k
 
@@ -77,7 +81,9 @@ program test
     out_1d(i) = splint(x,fcn_1d,tmp_1d,xt(i))
     err_1d(i) = abs(out_1d(i)-true_o1d(i))
 
-    write (*,*) 'Error at index ', i, ' is ', err_1d(i)
+    write (*,*) 'At index ', i, ','
+    write (*,*) ' value is ', true_o1d(i), ' and '
+    write (*,*) ' error is ', err_1d(i)
   
   end do
 
@@ -87,17 +93,24 @@ program test
 
   contains
 
-  function f1(x) !! 1d test function
-    implicit none
-    real(SP) :: x
-    f1 = 0.5_sp * (x*exp(-x) + sin(x) )
-  end function f1
+    function f1(x) !! 1d test function
+      implicit none
+      real(SP) :: x,f1
+      f1 = 0.5_sp * (x*exp(-x) + sin(x) )
+    end function f1
 
-  function f2(x,y) !! 2d test function
-    implicit none
-    real(SP) x,y,piov2
-    piov2 = 2.0_sp * atan(1.0_sp)
-    f2 = 0.5_sp * (y*exp(-x) + sin(piov2*y) )
-  end function f2
+    function f2(x,y) !! 2d test function
+      implicit none
+      real(SP) :: x,y,piov2,f2
+      piov2 = 2.0_sp * atan(1.0_sp)
+      f2 = 0.5_sp * (y*exp(-x) + sin(piov2*y) )
+    end function f2
+ 
+    function f3 (x,y,z) !! 3d test function
+      implicit none
+      real(SP) :: x,y,z,piov2,f3
+      piov2 = 2.0_sp*atan(1.0_sp)
+      f3 = 0.5_sp*( y*exp(-x) + z*sin(piov2*y) )
+    end function f3
 
 end program test

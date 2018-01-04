@@ -8,7 +8,7 @@ module nr
   ! On a purely serial machine, for greater efficiency, remove the 
   ! generic name tridag from the following interface, and put it on 
   ! the next one after that.
-  interface tridag
+  interface tridag_par
     recursive subroutine tridag_par(a,b,c,r,u)
       use nrtype
       real(SP), dimension(:), intent(in) :: a,b,c,r
@@ -24,7 +24,7 @@ module nr
     end subroutine tridag_ser
   end interface
 
-  interface
+  interface locate
     function locate(xx,x)
       use nrtype
       real(SP), dimension(:), intent(in) :: xx
