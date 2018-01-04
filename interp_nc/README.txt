@@ -1,0 +1,1 @@
+This directory stores my tests of interpolation algorithms based on Chapter 3 (and the corresponding codes for F90) of Numerical Recipes (FORTRAN edition).
