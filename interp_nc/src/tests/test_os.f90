@@ -146,15 +146,15 @@ program test_os
   end do
 
   !!-- Natural Spline
-
+  
   do i=1,nc_x1
     do j=1,nc_x2
       ! Only interpolating between nearby points
-      idx1 = (/ mod(max(locate(x1,x1_box(i))-10,1),nc_x1-1), &
-                min(locate(x1,x1_box(i))+10,nc_x1)  /)
-      idx2 = (/ mod(max(locate(x2,x2_box(j))-10,1),nc_x2-1), &
-                min(locate(x2,x2_box(j))+10,nc_x2)  /)
-
+      idx1 = (/ mod(max(locate(x1,x1_box(i))-10,1),ddim_2d(1)-1), &
+                min(locate(x1,x1_box(i))+10,ddim_2d(1))  /)
+      idx2 = (/ mod(max(locate(x2,x2_box(j))-10,1),ddim_2d(2)-1), &
+                min(locate(x2,x2_box(j))+10,ddim_2d(2))  /)
+      
       out_2d(i,j) = splint_2d(x1(idx1(1):idx1(2)) ,x2(idx2(1):idx2(2)), &
                               data_2d(idx1(1):idx1(2),idx2(1):idx2(2)), &
                               x1_box(i),x2_box(j))
