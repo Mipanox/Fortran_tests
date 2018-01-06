@@ -8,6 +8,7 @@ module nrtype
   ! Symbolic names for kind types of single- and double-precision reals:
   integer, parameter :: SP = kind(1.0)
   integer, parameter :: DP = kind(1.0D0)
+  integer, parameter :: p_double = kind(1.0D0)
 
   ! Symbolic names for kind types of single- and double-precision complex:
   integer, parameter :: SPC = kind((1.0  ,1.0))
