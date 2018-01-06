@@ -13,45 +13,47 @@ program test_os
 
   ! Variables for setting up test data
   !! datadim
-  integer, dimension(1), parameter :: ddim_1d = 8
-  integer, dimension(2), parameter :: ddim_2d = (/8, 9/)
-  integer, dimension(3), parameter :: ddim_3d = (/8, 9, 7/)
+  integer, dimension(1), parameter :: ddim_1d = 50
+  integer, dimension(2), parameter :: ddim_2d = (/50, 60/)
+  integer, dimension(3), parameter :: ddim_3d = (/50, 60, 1/)
 
-  real(dp), dimension(ddim_1d(1)) :: x1
-  real(dp), dimension(ddim_2d(2)) :: x2
-  real(dp), dimension(ddim_3d(3)) :: x3
+  real(p_double), dimension(ddim_1d(1)) :: x1
+  real(p_double), dimension(ddim_2d(2)) :: x2
+  real(p_double), dimension(ddim_3d(3)) :: x3
 
   !! function values on given grids / temporary storing spline output
-  real(dp), dimension(ddim_1d(1))                       :: data_1d, tmp_1d
-  real(dp), dimension(ddim_2d(1),ddim_2d(2))            :: data_2d, tmp_2d
-  real(dp), dimension(ddim_3d(1),ddim_3d(2),ddim_3d(3)) :: data_3d, tmp_3d
+  real(p_double), dimension(ddim_1d(1))                       :: data_1d, tmp_1d
+  real(p_double), dimension(ddim_2d(1),ddim_2d(2))            :: data_2d, tmp_2d
+  real(p_double), dimension(ddim_3d(1),ddim_3d(2),ddim_3d(3)) :: data_3d, tmp_3d
 
   ! Parameters of the test grids
   !! Box extent in new setup
-  real(dp), dimension(1), parameter :: bmin_1d = 2.68, &
+  real(p_double), dimension(1), parameter :: bmin_1d = 2.68, &
                                        bmax_1d = 40.
-  real(dp), dimension(2), parameter :: bmin_2d = (/2.68,  8.5/), &
+  real(p_double), dimension(2), parameter :: bmin_2d = (/2.68,  8.5/), &
                                        bmax_2d = (/40. , 36.5/)
-  real(dp), dimension(3), parameter :: bmin_3d = (/2.68,  8.5,  6.1/), &
+  real(p_double), dimension(3), parameter :: bmin_3d = (/2.68,  8.5,  6.1/), &
                                        bmax_3d = (/40. , 36.5, 20.5/)
 
   !! Sizes of cells in simulation units
-  real(dp), dimension(1), parameter :: dx_1d = 0.9
-  real(dp), dimension(2), parameter :: dx_2d = (/0.9, 1.6/)
-  real(dp), dimension(3), parameter :: dx_3d = (/0.9, 1.6, 0.8/)
+  real(p_double), dimension(1), parameter :: dx_1d = 0.9
+  real(p_double), dimension(2), parameter :: dx_2d = (/0.9, 1.6/)
+  real(p_double), dimension(3), parameter :: dx_3d = (/0.9, 1.6, 0.8/)
 
   !! Cell grids to be determined by box extent, etc.
   integer :: nc_x1, nc_x2, nc_x3
-  real(dp), allocatable, dimension(:) :: x1_box, x2_box, x3_box
+  real(p_double), allocatable, dimension(:) :: x1_box, x2_box, x3_box
 
 
   ! Variables for testing accuracy (true values at the new grid points)
-  real(dp), allocatable, dimension(:)     :: out_1d, tru_1d, err_1d
-  real(dp), allocatable, dimension(:,:)   :: out_2d, tru_2d, err_2d
-  real(dp), allocatable, dimension(:,:,:) :: out_3d, tru_3d, err_3d
+  real(p_double), allocatable, dimension(:)     :: out_1d, tru_1d, err_1d
+  real(p_double), allocatable, dimension(:,:)   :: out_2d, tru_2d, err_2d
+  real(p_double), allocatable, dimension(:,:,:) :: out_3d, tru_3d, err_3d
 
 
   integer :: i,j,k
+  integer, dimension(2) :: idx1,idx2,idx3
+  real(p_double) :: tmp
 
   !! Setup coordinate grids:
   !!  integer values for data grid
@@ -92,7 +94,7 @@ program test_os
 
 
   !!-- Natural Spline
-  call spline(x1,data_1d,1.0e30_dp,1.0e30_dp,tmp_1d)
+  call spline(x1,data_1d,1.0e30_p_double,1.0e30_p_double,tmp_1d)
 
   allocate(tru_1d(nc_x1))
   allocate(out_1d(nc_x1))
@@ -144,16 +146,24 @@ program test_os
   end do
 
   !!-- Natural Spline
+
   do i=1,nc_x1
     do j=1,nc_x2
-      out_2d(i,j) = splint_2d(x1,x2,data_2d,x1_box(i),x2_box(j))
+      idx1 = (/ mod(max(locate(x1,x1_box(i))-10,1),nc_x1-1), &
+                min(locate(x1,x1_box(i))+10,nc_x1)  /)
+      idx2 = (/ mod(max(locate(x2,x2_box(j))-10,1),nc_x2-1), &
+                min(locate(x2,x2_box(j))+10,nc_x2)  /)
+      
+      out_2d(i,j) = splint_2d(x1(idx1(1):idx1(2)) ,x2(idx2(1):idx2(2)), &
+                              data_2d(idx1(1):idx1(2),idx2(1):idx2(2)), &
+                              x1_box(i),x2_box(j))
       err_2d(i,j) = abs(out_2d(i,j)-tru_2d(i,j))
 
       if (mod(i,5)==0 .and. mod(j,5)==0) then
-        ! write (*,*) 'At index (',i,',',j,') coordinates', x1_box(i),x2_box(j)
-        ! write (*,*) ' value  is ', tru_2d(i,j), 'and'
-        ! write (*,*) ' output is ', out_2d(i,j), 'and'
-        ! write (*,*) ' error  is ', err_2d(i,j)
+        write (*,*) 'At index (',i,',',j,') coordinates', x1_box(i),x2_box(j)
+        write (*,*) ' value  is ', tru_2d(i,j), 'and'
+        write (*,*) ' output is ', out_2d(i,j), 'and'
+        write (*,*) ' error  is ', err_2d(i,j)
       end if
     end do
   end do
@@ -177,10 +187,8 @@ program test_os
     ! print *, x2_box(j)
   end do
   do k=1,nc_x3
-    print *, x3_box(k)
+    ! print *, x3_box(k)
   end do
-
-  print *, nc_x1, nc_x2, nc_x3
 
   !! true values
   allocate(tru_3d(nc_x1,nc_x2,nc_x3))
@@ -194,23 +202,23 @@ program test_os
       end do
     end do
   end do
-  print *, tru_3d
+  
   !!-- Natural Spline
-  do i=1,nc_x1
-    do j=1,nc_x2
-      do k=1,nc_x3
-        out_3d(i,j,k) = splint_3d(x1,x2,x3,data_3d,x1_box(i),x2_box(j),x3_box(k))
-        err_3d(i,j,k) = abs(out_3d(i,j,k)-tru_3d(i,j,k))
+  !do i=1,nc_x1
+  !  do j=1,nc_x2
+  !    do k=1,nc_x3
+  !      out_3d(i,j,k) = splint_3d(x1,x2,x3,data_3d,x1_box(i),x2_box(j),x3_box(k))
+  !      err_3d(i,j,k) = abs(out_3d(i,j,k)-tru_3d(i,j,k))
 
-        if (mod(i,5)==0 .and. mod(j,5)==0 .and. mod(k,10)==0) then
-          write (*,*) 'At index (',i,',',j,',',k,') coordinates', x1_box(i),x2_box(j),x3_box(k)
-          write (*,*) ' value  is ', tru_3d(i,j,k), 'and'
-          write (*,*) ' output is ', out_3d(i,j,k), 'and'
-          write (*,*) ' error  is ', err_3d(i,j,k)
-        end if
-      end do
-    end do
-  end do
+  !      if (mod(i,5)==0 .and. mod(j,5)==0 .and. mod(k,10)==0) then
+          !write (*,*) 'At index (',i,',',j,',',k,') coordinates', x1_box(i),x2_box(j),x3_box(k)
+          !write (*,*) ' value  is ', tru_3d(i,j,k), 'and'
+          !write (*,*) ' output is ', out_3d(i,j,k), 'and'
+          !write (*,*) ' error  is ', err_3d(i,j,k)
+  !      end if
+  !    end do
+  !  end do
+  !end do
 
   deallocate(tru_3d)
   deallocate(out_3d)
@@ -228,23 +236,23 @@ program test_os
     !-------------------------------------------------------------
     function f1(x) !! 1d test function
       implicit none
-      real(dp) :: x,f1
-      f1 = 0.5_dp * (x*exp(-x) + sin(x) )
+      real(p_double) :: x,f1
+      f1 = 0.5_p_double * (x*exp(-x) + sin(x) )
     end function f1
 
     function f2(x,y) !! 2d test function
       implicit none
-      real(dp) :: x,y,piov2,f2
-      piov2 = 2.0_dp !* atan(1.0_dp)
-      f2 = exp(-x/100.0_dp) * sin(piov2*y/50.0_dp) + cos((x/50.0_dp)**0.5)
-      !f2 = 0.5_dp * (y/50.0_dp*exp(-x/50.0_dp) + sin(piov2*y/50.0_dp) )
+      real(p_double) :: x,y,piov2,f2
+      piov2 = 2.0_p_double !* atan(1.0_p_double)
+      f2 = exp(-x/10.0_p_double) * sin(piov2*y/5.0_p_double) + cos((x/50.0_p_double)**0.5)
+      !f2 = 0.5_p_double * (y/50.0_p_double*exp(-x/50.0_p_double) + sin(piov2*y/50.0_p_double) )
     end function f2
  
     function f3 (x,y,z) !! 3d test function
       implicit none
-      real(dp) :: x,y,z,piov2,f3
-      piov2 = 2.0_dp!*atan(1.0_dp)
-      f3 = 0.5_dp*( y/50.0_dp*exp(-x/100.0_dp) + z/50.0_dp*sin(piov2*y/50.0_dp) )
+      real(p_double) :: x,y,z,piov2,f3
+      piov2 = 2.0_p_double!*atan(1.0_p_double)
+      f3 = 0.5_p_double*( y/50.0_p_double*exp(-x/100.0_p_double) + z/50.0_p_double*sin(piov2*y/50.0_p_double) )
     end function f3
 
 end program test_os

@@ -39,7 +39,7 @@ module m_interp_fun
     module procedure interp_grid3d
   end interface
 
-
+  public :: locate
   public :: spline, splint
   public :: splie2, splin2, splint_2d
   public :: splint_3d
@@ -208,11 +208,11 @@ contains
   !----- 1D ------------------------------------------------------------!
   !---------------------------------------------------------------------!
   
-  subroutine spline(x,y,yp1,ypn,y2)
+  subroutine spline(xx,y,yp1,ypn,y2)
     
     implicit none
 
-    real(p_double), dimension(:), intent(in) :: x,y
+    real(p_double), dimension(:), intent(in) :: xx,y
     real(p_double), intent(in) :: yp1, ypn
     real(p_double), dimension(:), intent(out) :: y2
     ! Given arrays x and y of length N containing a tabulated function,
@@ -226,11 +226,14 @@ contains
     ! spline, with zero second derivative on that boundary.
 
     integer :: n 
-    real(p_double), dimension(size(x)) :: a,b,c,r
+    real(p_double), dimension(size(xx)) :: a,b,c,r
+    real(p_double), dimension(size(xx)) :: x
     
-    n = size(x)
-    !print *,'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-    !print *,x
+    n = size(xx)
+
+    ! Smooth out oscillations
+    x = xx*1000.0_p_double*size(xx)
+
     c(1:n-1) = x(2:n) - x(1:n-1)       ! Set up the tridiagonal equations
     r(1:n-1) = 6.0_p_double*((y(2:n)-y(1:n-1))/c(1:n-1))
     r(2:n-1) = r(2:n-1) - r(1:n-2)
@@ -352,13 +355,6 @@ contains
       yytmp(j) = splint(x2a,ya(j,:),y2a(j,:),x2)
       ! Perform m evaluations of the row splines constructed by splie2,
       ! using the one-dimensional spline evaluator splint.
-
-      !!! NaN handling !!!
-      !if (j==1) then
-      !  if (isnan(yytmp(1))) yytmp(1)=0.0_p_double
-      !else
-        !if (isnan(yytmp(j))) yytmp(j)=0.0_p_double !yytmp(j-1)
-      !end if
     end do
 
     call spline(x1a,yytmp,1.0e30_p_double,1.0e30_p_double,y2tmp2)

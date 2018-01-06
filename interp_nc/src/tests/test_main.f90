@@ -8,8 +8,8 @@ program test
 
   implicit none
 
-  integer, parameter :: nx = 9     !! number of points in x
-  integer, parameter :: ny = 5     !! number of points in y
+  integer, parameter :: nx = 8     !! number of points in x
+  integer, parameter :: ny = 8     !! number of points in y
   integer, parameter :: nz = 8     !! number of points in z
 
   real(dp), dimension(nx) :: x
@@ -101,10 +101,12 @@ program test
       out_2d(i,j) = splint_2d(x,y,fcn_2d,xt(i),yt(j))
       err_2d(i,j) = abs(out_2d(i,j)-true_o2d(i,j))
 
-      ! write (*,*) 'At index (',i,',',j,') coordinates', xt(i),yt(j)
-      ! write (*,*) ' value  is ', true_o2d(i,j), 'and'
-      ! write (*,*) ' output is ', out_2d(i,j), 'and'
-      ! write (*,*) ' error  is ', err_2d(i,j)
+      if (mod(i,2)==0 .and. mod(j,2)==0) then
+        write (*,*) 'At index (',i,',',j,') coordinates', xt(i),yt(j)
+        write (*,*) ' value  is ', true_o2d(i,j), 'and'
+        write (*,*) ' output is ', out_2d(i,j), 'and'
+        write (*,*) ' error  is ', err_2d(i,j)
+      end if
     end do
   end do
 
@@ -118,9 +120,9 @@ program test
         err_3d(i,j,k) = abs(out_3d(i,j,k)-true_o3d(i,j,k))
 
         if (mod(i,2)==0 .and. mod(j,2)==0 .and. mod(k,2)==0) then
-          write (*,*) 'At index (',i,',',j,',',k,') coordinates', xt(i),yt(j),zt(k)
-          write (*,*) ' value is ', true_o3d(i,j,k), ' and '
-          write (*,*) ' error is ', err_3d(i,j,k)
+          ! write (*,*) 'At index (',i,',',j,',',k,') coordinates', xt(i),yt(j),zt(k)
+          ! write (*,*) ' value is ', true_o3d(i,j,k), ' and '
+          ! write (*,*) ' error is ', err_3d(i,j,k)
         end if
       end do
     end do
@@ -134,9 +136,9 @@ program test
         err_3d(i,j,k) = abs(out_3d(i,j,k)-fcn_3d(i,j,k))
 
         if (mod(i,2)==0 .and. mod(j,2)==0 .and. mod(k,2)==0) then
-          write (*,*) 'At coordinates', x(i),y(j),z(k)
-          write (*,*) ' value is ', fcn_3d(i,j,k), ' and '
-          write (*,*) ' error is ', err_3d(i,j,k)
+          ! write (*,*) 'At coordinates', x(i),y(j),z(k)
+          ! write (*,*) ' value is ', fcn_3d(i,j,k), ' and '
+          ! write (*,*) ' error is ', err_3d(i,j,k)
         end if
       end do
     end do
@@ -159,14 +161,14 @@ program test
     function f2(x,y) !! 2d test function
       implicit none
       real(dp) :: x,y,piov2,f2
-      piov2 = 2.0_dp * atan(1.0_dp)
-      f2 = 0.5_dp * (y*exp(-x) + sin(piov2*y) )
+      piov2 = 2.0_dp !* atan(1.0_dp)
+      f2 = exp(-x/100.0_p_double) * sin(piov2*y/50.0_p_double) + cos((x/50.0_p_double)**0.5)
     end function f2
  
     function f3 (x,y,z) !! 3d test function
       implicit none
       real(dp) :: x,y,z,piov2,f3
-      piov2 = 2.0_dp*atan(1.0_dp)
+      piov2 = 2.0_dp!*atan(1.0_dp)
       f3 = 0.5_dp*( y*exp(-x) + z*sin(piov2*y) )
     end function f3
 
