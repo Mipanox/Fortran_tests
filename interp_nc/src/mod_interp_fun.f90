@@ -40,6 +40,7 @@ module m_interp_fun
   end interface
 
   interface linint
+    module procedure lin_1d
     module procedure bilin_2d
   end interface
 
@@ -570,6 +571,40 @@ contains
   !-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!
   !-----      Linear Interpolation implementations
   !---------------------------------------------------------------------!
+  !----- 1D ------------------------------------------------------------!
+  !---------------------------------------------------------------------!
+
+  function lin_1d(xa,ya,x)
+
+    ! This function uses bilinear interpolation to estimate the value
+    ! of a function ya at point x
+    ! f is assumed to be sampled on a regular grid, with the grid x values specified
+    ! by xa
+    
+    implicit none
+
+    real(p_double), dimension(:), intent(in) :: xa,ya
+    real(p_double), intent(in) :: x
+    real(p_double) :: lin_1d
+    
+    real(p_double) :: xl,xh
+    integer :: xj
+
+    ! indices of x in xa
+    xj = locate(xa,x)
+
+    !!
+    xl = xa(xj)
+    xh = xa(xj+1)
+
+    !
+    lin_1d = ( ya(xj)*(xh-x) + ya(xj+1)*(x-xl) ) / (xh-xl)
+
+  end function lin_1d
+
+
+
+  !---------------------------------------------------------------------!
   !----- 2D ------------------------------------------------------------!
   !---------------------------------------------------------------------!
 
@@ -614,6 +649,12 @@ contains
                  ya(x1j+1,x2j+1)*(x1-x1l)*(x2-x2l) ) / denom
     
   end function bilin_2d
+
+  !---------------------------------------------------------------------!
+  !----- 3D ------------------------------------------------------------!
+  !---------------------------------------------------------------------!
+
+  
 
 end module m_interp_fun
 

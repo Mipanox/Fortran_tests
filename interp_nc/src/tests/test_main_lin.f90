@@ -20,9 +20,9 @@ program test_lin
   real(dp), dimension(nz-1) :: zt
 
   ! function values on given grids / temporary storing spline output
-  real(dp), dimension(nx)       :: fcn_1d, tmp_1d
+  real(dp), dimension(nx)       :: fcn_1d, tmp_1d, out_1d_, err_1d_
   real(dp), dimension(nx,ny)    :: fcn_2d, tmp_2d
-  real(dp), dimension(nx,ny,nz) :: fcn_3d, tmp_3d
+  real(dp), dimension(nx,ny,nz) :: fcn_3d, tmp_3d, out_3d_, err_3d_
 
   ! arrays for values on test grids (with 1 fewer index)
   !  true_o*d stores true function values from f1,f2,f3 defined below
@@ -77,6 +77,23 @@ program test_lin
   end do
 
   
+  ! It is not wise to test on the grid points (as done in spline tests)
+  !  since the denominator(s) in linear interpolations would go to infinity
+
+  !---------------------------------------------------------------------
+  !-- 1D
+  !---------------------------------------------------------------------
+  do i=1,nx-1
+    out_1d(i) = linint(x,fcn_1d,xt(i))
+    err_1d(i) = abs(out_1d(i)-true_o1d(i))
+
+    write (*,*) 'At index (',i,') coordinate', xt(i)
+    write (*,*) ' value  is ', true_o1d(i), 'and'
+    write (*,*) ' output is ', out_1d(i), 'and'
+    write (*,*) ' error  is ', err_1d(i)/true_o1d(i)*100, '%'
+
+  end do
+
   !---------------------------------------------------------------------
   !-- 2D
   !---------------------------------------------------------------------
@@ -86,47 +103,47 @@ program test_lin
       err_2d(i,j) = abs(out_2d(i,j)-true_o2d(i,j))
 
       if (mod(i,2)==0 .and. mod(j,2)==0) then
-        write (*,*) 'At index (',i,',',j,') coordinates', xt(i),yt(j)
-        write (*,*) ' value  is ', true_o2d(i,j), 'and'
-        write (*,*) ' output is ', out_2d(i,j), 'and'
-        write (*,*) ' error  is ', err_2d(i,j)/true_o2d(i,j) * 100, '%'
+        ! write (*,*) 'At index (',i,',',j,') coordinates', xt(i),yt(j)
+        ! write (*,*) ' value  is ', true_o2d(i,j), 'and'
+        ! write (*,*) ' output is ', out_2d(i,j), 'and'
+        ! write (*,*) ' error  is ', err_2d(i,j)/true_o2d(i,j) * 100, '%'
       end if
     end do
   end do
 
   !---------------------------------------------------------------------
-  !-- Test spline - 3D
+  !-- 3D
   !---------------------------------------------------------------------
-  !do i=1,nx-1
-  !  do j=1,ny-1
-  !    do k=1,nz-1
-  !      out_3d(i,j,k) = splint_3d(x,y,z,fcn_3d,xt(i),yt(j),zt(k))
-  !      err_3d(i,j,k) = abs(out_3d(i,j,k)-true_o3d(i,j,k))
+  do i=1,nx-1
+    do j=1,ny-1
+      do k=1,nz-1
+        out_3d(i,j,k) = splint_3d(x,y,z,fcn_3d,xt(i),yt(j),zt(k))
+        err_3d(i,j,k) = abs(out_3d(i,j,k)-true_o3d(i,j,k))
 
-  !      if (mod(i,2)==0 .and. mod(j,2)==0 .and. mod(k,2)==0) then
+        if (mod(i,2)==0 .and. mod(j,2)==0 .and. mod(k,2)==0) then
           ! write (*,*) 'At index (',i,',',j,',',k,') coordinates', xt(i),yt(j),zt(k)
           ! write (*,*) ' value is ', true_o3d(i,j,k), ' and '
           ! write (*,*) ' error is ', err_3d(i,j,k)
-  !      end if
-  !    end do
-  !  end do
-  !end do
+        end if
+      end do
+    end do
+  end do
 
   !! Santiy check; inputing the exact same grid
-  !do i=1,nx
-  !  do j=1,ny
-  !    do k=1,nz
-  !      out_3d(i,j,k) = splint_3d(x,y,z,fcn_3d,x(i),y(j),z(k))
-  !      err_3d(i,j,k) = abs(out_3d(i,j,k)-fcn_3d(i,j,k))
+  do i=1,nx
+    do j=1,ny
+      do k=1,nz
+        out_3d(i,j,k) = splint_3d(x,y,z,fcn_3d,x(i),y(j),z(k))
+        err_3d_(i,j,k) = abs(out_3d(i,j,k)-fcn_3d(i,j,k))
 
-  !      if (mod(i,2)==0 .and. mod(j,2)==0 .and. mod(k,2)==0) then
+        if (mod(i,2)==0 .and. mod(j,2)==0 .and. mod(k,2)==0) then
           ! write (*,*) 'At coordinates', x(i),y(j),z(k)
           ! write (*,*) ' value is ', fcn_3d(i,j,k), ' and '
-  !        ! write (*,*) ' error is ', err_3d(i,j,k)
-  !      end if
-  !    end do
-  !  end do
-  !end do
+          ! write (*,*) ' error is ', err_3d(i,j,k)
+        end if
+      end do
+    end do
+  end do
 
 
 
