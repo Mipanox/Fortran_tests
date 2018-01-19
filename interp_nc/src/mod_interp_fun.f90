@@ -39,12 +39,18 @@ module m_interp_fun
     module procedure interp_grid3d
   end interface
 
+  interface linint
+    module procedure bilin_2d
+  end interface
+
   public :: locate
   public :: spline, splint
   public :: splie2, splin2, splint_2d
   public :: splint_3d
 
   public :: interp_grid
+
+  public :: linint
 
 contains
 
@@ -559,6 +565,55 @@ contains
     end do
 
   end subroutine interp_grid3d
+
+
+  !-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!
+  !-----      Linear Interpolation implementations
+  !---------------------------------------------------------------------!
+  !----- 2D ------------------------------------------------------------!
+  !---------------------------------------------------------------------!
+
+  function bilin_2d(x1a,x2a,ya,x1,x2)
+
+    ! This function uses bilinear interpolation to estimate the value
+    ! of a function ya at point (x1,x2)
+    ! f is assumed to be sampled on a regular grid, with the grid x values specified
+    ! by x1a and the grid y values specified by x2a
+    ! Reference: http://en.wikipedia.org/wiki/Bilinear_interpolation; 
+    !            https://github.com/cfinch/
+    
+    implicit none
+
+    real(p_double), dimension(:), intent(in) :: x1a,x2a
+    real(p_double), dimension(:,:), intent(in) :: ya
+    real(p_double), intent(in) :: x1,x2
+
+    real(p_double) :: denom,x1l,x1h,x2l,x2h
+    integer :: x1j,x2j
+
+    real(p_double) :: bilin_2d
+
+    ! indices of x1,x2 in x1a,x2a
+    x1j = locate(x1a,x1)
+    x2j = locate(x2a,x2)
+
+    !!
+    x1l = x1a(x1j)
+    x1h = x1a(x1j+1)
+
+    x2l = x2a(x2j)
+    x2h = x2a(x2j+1)
+
+    !
+    denom = (x1h - x1l) * (x2h - x2l)
+
+    !
+    bilin_2d = ( ya(x1j,x2j)*(x1h-x1)*(x2h-x2) + &
+                 ya(x1j+1,x2j)*(x1-x1l)*(x2h-x2) + & 
+                 ya(x1j,x2j+1)*(x1h-x1)*(x2-x2l) + &
+                 ya(x1j+1,x2j+1)*(x1-x1l)*(x2-x2l) ) / denom
+    
+  end function bilin_2d
 
 end module m_interp_fun
 
