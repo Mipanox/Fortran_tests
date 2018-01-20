@@ -42,6 +42,7 @@ module m_interp_fun
   interface linint
     module procedure lin_1d
     module procedure bilin_2d
+    module procedure trilin_3d
   end interface
 
   public :: locate
@@ -654,7 +655,53 @@ contains
   !----- 3D ------------------------------------------------------------!
   !---------------------------------------------------------------------!
 
-  
+  function trilin_3d(x1a,x2a,x3a,ya,x1,x2,x3)
+
+    ! This function uses bilinear interpolation to estimate the value
+    ! of a function ya at point (x1,x2,x3)
+    ! f is assumed to be sampled on a regular grid, with the grid x values specified
+    ! by x1a and y values by x2a and z values by x3a
+    ! Reference: https://en.wikipedia.org/wiki/Trilinear_interpolation
+    
+    implicit none
+
+    real(p_double), dimension(:), intent(in) :: x1a,x2a,x3a
+    real(p_double), dimension(:,:,:), intent(in) :: ya
+    real(p_double), intent(in) :: x1,x2,x3
+
+    real(p_double) :: x1l,x1h,x2l,x2h,x3l,x3h
+    real(p_double) :: c0,c1
+    real(p_double), dimension(size(ya,1),size(ya,2)) :: yaz0,yaz1
+    integer :: x1j,x2j,x3j
+
+    real(p_double) :: trilin_3d
+
+    ! indices of x1,x2,x3 in x1a,x2a,x3a
+    x1j = locate(x1a,x1)
+    x2j = locate(x2a,x2)
+    x3j = locate(x3a,x3)
+
+    !!
+    x1l = x1a(x1j)
+    x1h = x1a(x1j+1)
+
+    x2l = x2a(x2j)
+    x2h = x2a(x2j+1)
+
+    x3l = x3a(x3j)
+    x3h = x3a(x3J+1)
+
+    ! temp - bilinear interp in z planes
+    yaz0 = ya(:,:,x3j)
+    yaz1 = ya(:,:,x3j+1)
+
+    c0 = bilin_2d(x1a,x2a,yaz0,x1,x2)
+    c1 = bilin_2d(x1a,x2a,yaz1,x1,x2)
+
+    ! linear interp in z
+    trilin_3d = ( c0*(x3a(x3j+1)-x3) + c1*(x3-x3a(x3j)) ) / (x3a(x3j+1)-x3a(x3j))
+    
+  end function trilin_3d
 
 end module m_interp_fun
 

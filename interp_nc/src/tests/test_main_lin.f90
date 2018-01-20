@@ -38,19 +38,19 @@ program test_lin
   !  half integers for grid to be interpolated
   do i=1,nx-1
      x(i)  = dble(i-1)!/dble(nx-1)
-     xt(i) = (dble(i)-0.5)!/dble(nx-1)
+     xt(i) = (dble(i)-0.03)!/dble(nx-1)
   end do
   x(nx) = dble(nx-1)!/dble(nx-1)
 
   do j=1,ny-1
      y(j)  = (dble(j-1))!/dble(ny-1)
-     yt(j) = (dble(j)-0.5)!/dble(ny-1)
+     yt(j) = (dble(j)-0.03)!/dble(ny-1)
   end do
   y(ny) = dble(ny-1)!/dble(ny-1)
 
   do k=1,nz-1
      z(k)  = (dble(k-1))!/dble(nz-1)
-     zt(k) = (dble(k)-0.5)!/dble(nz-1)
+     zt(k) = (dble(k)-0.03)!/dble(nz-1)
   end do
   z(nz) = dble(nz-1)!/dble(nz-1)
 
@@ -87,10 +87,10 @@ program test_lin
     out_1d(i) = linint(x,fcn_1d,xt(i))
     err_1d(i) = abs(out_1d(i)-true_o1d(i))
 
-    write (*,*) 'At index (',i,') coordinate', xt(i)
-    write (*,*) ' value  is ', true_o1d(i), 'and'
-    write (*,*) ' output is ', out_1d(i), 'and'
-    write (*,*) ' error  is ', err_1d(i)/true_o1d(i)*100, '%'
+    ! write (*,*) 'At index (',i,') coordinate', xt(i)
+    ! write (*,*) ' value  is ', true_o1d(i), 'and'
+    ! write (*,*) ' output is ', out_1d(i), 'and'
+    ! write (*,*) ' error  is ', err_1d(i)/true_o1d(i)*100, '%'
 
   end do
 
@@ -103,10 +103,10 @@ program test_lin
       err_2d(i,j) = abs(out_2d(i,j)-true_o2d(i,j))
 
       if (mod(i,2)==0 .and. mod(j,2)==0) then
-        ! write (*,*) 'At index (',i,',',j,') coordinates', xt(i),yt(j)
-        ! write (*,*) ' value  is ', true_o2d(i,j), 'and'
-        ! write (*,*) ' output is ', out_2d(i,j), 'and'
-        ! write (*,*) ' error  is ', err_2d(i,j)/true_o2d(i,j) * 100, '%'
+        write (*,*) 'At index (',i,',',j,') coordinates', xt(i),yt(j)
+        write (*,*) ' value  is ', true_o2d(i,j), 'and'
+        write (*,*) ' output is ', out_2d(i,j), 'and'
+        write (*,*) ' error  is ', err_2d(i,j)/true_o2d(i,j) * 100, '%'
       end if
     end do
   end do
@@ -117,36 +117,18 @@ program test_lin
   do i=1,nx-1
     do j=1,ny-1
       do k=1,nz-1
-        out_3d(i,j,k) = splint_3d(x,y,z,fcn_3d,xt(i),yt(j),zt(k))
+        out_3d(i,j,k) = linint(x,y,z,fcn_3d,xt(i),yt(j),zt(k))
         err_3d(i,j,k) = abs(out_3d(i,j,k)-true_o3d(i,j,k))
 
         if (mod(i,2)==0 .and. mod(j,2)==0 .and. mod(k,2)==0) then
-          ! write (*,*) 'At index (',i,',',j,',',k,') coordinates', xt(i),yt(j),zt(k)
-          ! write (*,*) ' value is ', true_o3d(i,j,k), ' and '
-          ! write (*,*) ' error is ', err_3d(i,j,k)
+          write (*,*) 'At index (',i,',',j,',',k,') coordinates', xt(i),yt(j),zt(k)
+          write (*,*) ' value  is ', true_o3d(i,j,k), ' and '
+          write (*,*) ' output is ', out_3d(i,j,k), 'and'
+          write (*,*) ' error  is ', err_3d(i,j,k)/true_o3d(i,j,k)*100, '%'
         end if
       end do
     end do
   end do
-
-  !! Santiy check; inputing the exact same grid
-  do i=1,nx
-    do j=1,ny
-      do k=1,nz
-        out_3d(i,j,k) = splint_3d(x,y,z,fcn_3d,x(i),y(j),z(k))
-        err_3d_(i,j,k) = abs(out_3d(i,j,k)-fcn_3d(i,j,k))
-
-        if (mod(i,2)==0 .and. mod(j,2)==0 .and. mod(k,2)==0) then
-          ! write (*,*) 'At coordinates', x(i),y(j),z(k)
-          ! write (*,*) ' value is ', fcn_3d(i,j,k), ' and '
-          ! write (*,*) ' error is ', err_3d(i,j,k)
-        end if
-      end do
-    end do
-  end do
-
-
-
 
 
   !---------------------------------------------------------------------
@@ -170,7 +152,7 @@ program test_lin
       implicit none
       real(dp) :: x,y,z,piov2,f3
       piov2 = 2.0_dp!*atan(1.0_dp)
-      f3 = 0.5_dp*( y*exp(-x) + z*sin(piov2*y) )
+      f3 = 0.5_dp*( y/50.0_p_double*exp(-x/50.0_p_double) + z*sin(piov2*y/50.0_p_double) )
     end function f3
 
 end program test_lin
